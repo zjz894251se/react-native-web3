@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <title>Dapp</title>
+</head>
+<body>
+  <h2>这个是Dapp页面</h2>
+  <p id="info"></p>
+  <button onclick="getChainId()">getChainId</button>
+  <button onclick="getAccounts()">账户列表</button>
+  <p id="defaultAddr"></p>
+  <button onclick="getBalance()">账户余额</button>
+  <button onclick="transRopsten()">ropsten转账</button>
+<script>
+  let InfoDom = document.getElementById("info");
+  if (window.web3){
+    InfoDom.innerHTML += "检测到 web3";
+  }else{
+    InfoDom.innerHTML += "没有检测到 web3";
+  }
+  if (window.web3 && window.web3.currentProvider){
+    InfoDom.innerHTML += " | 检测到 web3.currentProvider";
+  }else{
+	InfoDom.innerHTML += " | 没有检测到 web3.currentProvider";
+  }
+  /**
+   * @type {Web3}
+   */
+  let wb3 = new window.web3(window.web3.currentProvider);
+  let accounts = [];
+  let defaultAddress=null;
+  function getChainId(){
+    wb3.eth.getChainId().then(chainId=> {
+      alert("chainId:" + chainId);
+    }).catch(err=>{
+      alert(err);
+    })
+  }
+
+  // 设置默认地址
+  function setNormalAddress(addr){
+    defaultAddress = addr;
+    document.getElementById('defaultAddr').innerHTML = addr;
+  }
+  // 获取账户列表
+  function getAccounts(){
+    wb3.eth.getAccounts().then(acc=>{
+      InfoDom.innerHTML += "<br>地址列表:<br>";
+      for(let addr of acc){
+        InfoDom.innerHTML += `<a href="javascript:setNormalAddress('${addr}')">${addr}</a><br>`
+      }
+      accounts = acc
+    }).catch(err=>{
+      alert(err);
+    })
+  }
+  // 获取余额
+  function getBalance(){
+    if (!defaultAddress){
+      alert('请先选择默认地址');
+    }else{
+      wb3.eth.getBalance(defaultAddress).then(val=>{
+        alert(web3.utils.fromWei(val));
+      })
+    }
+  }
+
+  function transRopsten(){
+    wb3.eth.sendTransaction({
+      from:defaultAddress,
+      to:'0x064674d71b528141ab49a87b8e8b2cfbfe051025',
+      value:web3.utils.toWei('1',"gwei"),// 测试网络值太小会错误
+      gasPrice:web3.utils.toWei('1',"gwei"),// 这个可以出弹窗让客户选择
+    }).then(result=>{
+      alert(result);
+    }).catch(err=>{
+      alert(err);
+    })
+  }
+</script>
+</body>
+</html>
