@@ -167,7 +167,7 @@ export default class WebViewBridge {
                                 })
                                 /**
                                  * 结果
-                                 * {"id": 1640827795251, "jsonrpc": "2.0", "result": "0xec8070699a0c4126e424cf43cc5bb6135239ea13b79ef1294d83ba73c6613a96"}
+                                 * {"id": 1640827795251, "jsonrpc": "2.0", "result": "0xe..."}
                                  */
                                 let txUiData = Object.assign({},tx,{
                                     signTx:signTx,
