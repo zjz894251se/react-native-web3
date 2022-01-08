@@ -4,9 +4,8 @@ import WebView from 'react-native-webview';
 import Injected from "../../../injected.json";
 import WebViewBridge, {UiEventType} from "../../WebViewBridge";
 import {NativeBaseProvider, Actionsheet, Text,Box,VStack,HStack,Button,FormControl} from "native-base";
-import {useState} from "react";
+import {useState,useEffect} from "react";
 import {formatEther} from "../../core/utils";
-import {ethers} from "ethers";
 
 /**
  * @property {number} chainId
@@ -57,6 +56,11 @@ function TxActionsheet(props){
 }
 
 export default function Dapp(props) {
+    useEffect(()=>{
+        return ()=>{
+            console.log("WillUnmount")
+        }
+    })
     const {chainId, uri} = props.route.params
     const [tx,setTx] = useState()
     const [txOpen,setTxOpen] = useState(false);
@@ -82,8 +86,8 @@ export default function Dapp(props) {
     }))
     // dapp列表发过来的消息
     const onMessage = (evt) => {
-        console.log(evt);
-        webViewBridge.onEvent(evt.nativeEvent.data);
+        // console.log(evt);
+        webViewBridge.onMessage(evt.nativeEvent.data);
     }
     // android 需要使用自定义的WebView中的注入方法，防止出现某些异常
     if (Platform.OS === 'android') {
@@ -91,13 +95,20 @@ export default function Dapp(props) {
             <NativeBaseProvider>
                 <WebView
                     ref={r => webViewBridge.setWebview(r)}
+                    userAgent={"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36"}
                     source={{uri: uri}}
-                    injectedJavaScriptOnLoadHtml={Injected.provider} // [自定义参数] 页面注入内容
-                    injectedJavaScriptOnLoadHtmlOnlyFirst={true} // [自定义参数] 是否仅在首次页面中注入
+                    injectedJavaScript={Injected.provider}
+                    injectedJavaScriptOnLoadStart={Injected.MetaMask} // [自定义参数,页面开始加载注入内容] 按需加载
                     openSchemeUrlEnabled={false} // [自定义参数] 是否允许打开三方应用
+                    injectedJavaScriptForMainFrameOnly={false}
+                    injectedJavaScriptBeforeContentLoadedForMainFrameOnly={false}
                     onMessage={onMessage}
-                    onError={event => Alert.alert("应用加载失败", "应用加载失败，请稍后重试，或者联系我们，给您带来的不便请见谅")}
-                    onLoadProgress={({nativeEvent}) => console.log(nativeEvent.progress)}
+                    onLoad={(syntheticEvent) => {
+                        const { nativeEvent } = syntheticEvent;
+                        // 这里可以动态设置标题 nativeEvent.header;
+                    }}
+                    onError={event => console.log(event.nativeEvent)}
+                    onLoadProgress={e=>console.log(e.nativeEvent.progress)}
                 />
                 <TxActionsheet isOpen={txOpen} tx={tx} oncConfirm={()=>{
                     if(uiEvent){
@@ -118,7 +129,11 @@ export default function Dapp(props) {
                 <WebView
                     ref={r => webViewBridge.setWebview(r)}
                     source={{uri: uri}}
-                    injectedJavaScriptBeforeContentLoaded={Injected.provider}
+                    userAgent={"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36"}
+                    injectedJavaScriptBeforeContentLoaded={Injected.MetaMask}
+                    injectedJavaScript={Injected.provider}
+                    injectedJavaScriptForMainFrameOnly={false}
+                    injectedJavaScriptBeforeContentLoadedForMainFrameOnly={false}
                     onMessage={onMessage}
                     onError={event => Alert.alert("应用加载失败", "应用加载失败，请稍后重试，或者联系我们，给您带来的不便请见谅")}
                 />
